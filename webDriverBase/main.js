@@ -51,18 +51,17 @@ function createWorker(data, successData, failData) {
     workerProcess.on('disconnect', function() {
         console.log('工作子程序异常结束');
         // 工作子程序异常结束，则将相应处理的数据存入处理失败序列
-        failData.push(data[data.index]);
-        data.index++;
+        failData.push(data[data.index - 1]);
+        //data.index++;
         process.emit('createWorker');
     });
 
     workerProcess.on('message', function(m) {
         if (isNaN(data.index)) {
             data.index = 0;
-        } else {
-            console.log('正在处理条目序号：', data.index);
-            console.log('信息内容为：', JSON.stringify(data[data.index]));
         }
+        console.log('正在处理条目序号：', 1 + data.index);
+        console.log('信息内容为：', JSON.stringify(data[data.index]));
 
         if (m.type == 'start') {
             if (data.length == 0) {
