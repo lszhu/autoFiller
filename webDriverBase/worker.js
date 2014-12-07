@@ -1,7 +1,8 @@
 // 配置文件
-var config = require('./config');
+var config = require('./config')['chequeSys'];
 // 操作序列
-var operation = require('./operation');
+var operation = require('./chequeSysOperation');
+//var operation = require('./operation');
 
 //var util = require('util');
 
@@ -56,8 +57,7 @@ function setFlow() {
     // 登录错误处理
     //flow.on('loginErr', function(e) {
     //    console.error('未能正常登录，稍后会自动重试。');
-    //    //operation.login(driver, config.test, e.times);
-    //    //test(driver, config.test);
+    //    //operation.login(driver, config, e.times);
     //});
 
     // 多次重试登录错误处理
@@ -66,13 +66,12 @@ function setFlow() {
         driver.quit();
         server.stop();
         process.send({status: 'accountErr'});
-        //test(driver, config.test);
     });
 
     // 当前操作流完成的消息处理
     flow.on('idle', function() {
         //console.log('idle now');
-        addOperation(driver, config.test);
+        addOperation(driver, config);
     });
 
     // 所有操作已完成
@@ -93,8 +92,13 @@ function setFlow() {
 function addOperation(driver, param) {
     //console.log('data: ' + JSON.stringify(data));
     if (data.status == 'data') {
-        operation.search(driver, param);
-        operation.summary(driver, param);
+        // test(hrSys) operation
+        //operation.search(driver, param);
+        //operation.summary(driver, param);
+
+        // chequeSys operation
+        operation.createProject(driver, param, data.data);
+
         data = null;
         process.send({status: 'success'});
     } else if (data.status == 'noData') {
@@ -120,7 +124,7 @@ function addOperation(driver, param) {
  * 主程序控制流
  */
 
-var counter = 1;
+//var counter = 1;
 var data = null;
 
 var flow = setFlow();
@@ -147,6 +151,6 @@ process.on('message', function(d) {
     //console.log('data: ' + JSON.stringify(data));
 });
 
-operation.login(driver, config.test, 3);
+operation.login(driver, config, 3);
 
 console.log('child process started.');

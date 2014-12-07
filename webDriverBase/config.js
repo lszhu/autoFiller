@@ -6,6 +6,14 @@ var actionTest = {
     fields: ['姓名', '身份证号码', '联系电话']
 };
 
+var actionChequeSys = {
+    url: 'http://localhost:23456/',
+    username: 'admin',
+    password: 'admin',
+    retryInterval: 2000,
+    fields: ['name', 'id', 'description']
+};
+
 var actionInput = {
     url: 'http://59.231.0.185/creatorepp/',
     username: '1311273729',
@@ -22,6 +30,7 @@ var actionConfirm = {
 
 module.exports = {
     test: actionTest,
+    chequeSys: actionChequeSys,
     input: actionInput,
     confirm: actionConfirm
 };

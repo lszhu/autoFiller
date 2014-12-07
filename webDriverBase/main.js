@@ -1,5 +1,5 @@
 // 配置文件
-var config = require('./config');
+var config = require('./config')['chequeSys'];
 
 var childProcess = require('child_process');
 var fs = require('fs');
@@ -30,7 +30,7 @@ function getData(filePath) {
 
 // 过滤掉数据不完整的条目
 function filterData(data) {
-    var fields = config.test.fields;
+    var fields = config.fields;
     return data.filter(function(e) {
         for (var i = 0; i < fields.length; i++) {
             if (!e.hasOwnProperty(fields[i]) || !e[fields[i]]) {
@@ -48,9 +48,9 @@ function filterData(data) {
 // 保存处理过的数据到文件
 function saveResult() {
     var timeId = timeToId();
-    var fields = config.test.fields;
+    var fields = config.fields;
     jsonToCsv('../data/success-' + timeId + '.csv', successData, fields);
-    jsonToCsv('../data/success-' + timeId + '.csv', failData, fields);
+    jsonToCsv('../data/fail-' + timeId + '.csv', failData, fields);
     /*
     var success = '';
     var fail = '';
@@ -82,7 +82,8 @@ function jsonToCsv(filePath, data, fields) {
         d += fields[i] + ',';
     }
     d += fields[fieldsLen] + '\r\n';
-    for (i = 0, len = data.length; i < len; i++) {
+    var len = data.length;
+    for (i = 0; i < len; i++) {
         for (j = 0; j < fieldsLen; j++) {
             //console.log('fields: ' + [fields[j]]);
             //console.log('d: ' + d);
@@ -127,8 +128,11 @@ function createWorker(data, successData, failData) {
     workerProcess.on('disconnect', function() {
         console.log('工作子程序退出');
         // 工作子程序异常结束，则将相应处理的数据存入处理失败序列
-        failData.push(data[data.index - 1]);
-        //data.index++;
+        if (data.index > 0) {
+            data.index--;
+            failData.push(data[data.index]);
+        }
+
         process.emit('createWorker');
     });
 
@@ -193,10 +197,16 @@ function createWorker(data, successData, failData) {
  * 主程序流程
  */
 
-var filePath = '../data/名单.xlsx';
-var data = filterData(getData(filePath));
-//console.log(data);
-jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.test.fields);
+// 用于test（hrSys）项目测试
+//var filePath = '../data/名单.xlsx';
+//var data = filterData(getData(filePath));
+
+// 用于chequeSys项目测试
+var filePath = '../data/project.xlsx';
+var data = getData(filePath);
+
+console.log(data);
+//jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.fields);
 var successData = [];
 var failData = [];
 
@@ -220,4 +230,4 @@ process.on('createWorker', function() {
     workerProcess = createWorker(data, successData, failData);
 });
 
-//process.emit('createWorker');
+process.emit('createWorker');
