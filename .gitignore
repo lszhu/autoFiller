@@ -4,3 +4,4 @@ node_modules/
 .idea
 app/bower_components/
 data
+webDriverBase/server
