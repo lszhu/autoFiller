@@ -2,7 +2,8 @@ var actionTest = {
     url: 'http://218.76.253.36:40008/',
     username: 'admin',
     password: 'jyj222666',
-    retryInterval: 2000
+    retryInterval: 2000,
+    fields: ['姓名', '身份证号码', '联系电话']
 };
 
 var actionInput = {

@@ -1,3 +1,6 @@
+// 配置文件
+var config = require('./config');
+
 var childProcess = require('child_process');
 var fs = require('fs');
 
@@ -27,7 +30,7 @@ function getData(filePath) {
 
 // 过滤掉数据不完整的条目
 function filterData(data) {
-    var fields = ['姓名', '身份证号码', '联系电话'];
+    var fields = config.test.fields;
     return data.filter(function(e) {
         for (var i = 0; i < fields.length; i++) {
             if (!e.hasOwnProperty(fields[i]) || !e[fields[i]]) {
@@ -44,6 +47,11 @@ function filterData(data) {
 
 // 保存处理过的数据到文件
 function saveResult() {
+    var timeId = timeToId();
+    var fields = config.test.fields;
+    jsonToCsv('../data/success-' + timeId + '.csv', successData, fields);
+    jsonToCsv('../data/success-' + timeId + '.csv', failData, fields);
+    /*
     var success = '';
     var fail = '';
     var timeId = timeToId();
@@ -62,7 +70,27 @@ function saveResult() {
     if (fail) {
         fs.writeFileSync('../data/fail-' + timeId + '.txt', fail);
     }
+*/
+}
 
+// JSON格式数据的数组转换并保存到csv格式文件
+function jsonToCsv(filePath, data, fields) {
+    var d = '';
+    var i, j;
+    var fieldsLen = fields.length - 1;
+    for (i = 0; i < fieldsLen; i++) {
+        d += fields[i] + ',';
+    }
+    d += fields[fieldsLen] + '\r\n';
+    for (i = 0, len = data.length; i < len; i++) {
+        for (j = 0; j < fieldsLen; j++) {
+            //console.log('fields: ' + [fields[j]]);
+            //console.log('d: ' + d);
+            d += data[i][fields[j]] + ',';
+        }
+        d += data[i][fields[fieldsLen]] + '\r\n';
+    }
+    fs.writeFileSync(filePath, d, 'utf8');
 }
 
 // 由时间戳生成唯一标识，用于文件名
@@ -168,6 +196,7 @@ function createWorker(data, successData, failData) {
 var filePath = '../data/名单.xlsx';
 var data = filterData(getData(filePath));
 //console.log(data);
+jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.test.fields);
 var successData = [];
 var failData = [];
 
@@ -191,4 +220,4 @@ process.on('createWorker', function() {
     workerProcess = createWorker(data, successData, failData);
 });
 
-process.emit('createWorker');
+//process.emit('createWorker');
