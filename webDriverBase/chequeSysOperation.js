@@ -121,27 +121,45 @@ function createProject(driver, param, data) {
     //    5000);
 }
 
-function deleteProject(driver, param) {
-    //driver.findElement(webdriver.By.linkText('\u68C0\u7D22')).click();
-    driver.get(param.url + '/search');
+function searchProject(driver, param, data) {
+    driver.get(param.url + '#/search/queryProject');
 
-    var username = driver.findElement(webdriver.By.name('username'));
-    //username.clear();
-    username.sendKeys('张');
-    var ageMin = driver.findElement(webdriver.By.name('ageMin'));
-    //ageMin.clear();
-    ageMin.sendKeys('60');
-    var ageMax = driver.findElement(webdriver.By.name('ageMax'));
-    //ageMax.clear();
-    ageMax.sendKeys('61');
-    var query = driver.findElement(webdriver.By.css('.query'));
-    query.click();
-    driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
-        5000);
+    var username = driver.findElement(webdriver.By.name('name'));
+    username.clear();
+    username.sendKeys(data.name);
+    var id = driver.findElement(webdriver.By.name('id'));
+    id.clear();
+    id.sendKeys(data.id);
+    var description = driver.findElement(webdriver.By.name('description'));
+    description.clear();
+    description.sendKeys(data.description);
+    driver.findElement(webdriver.By.css('button[type="submit"]')).click();
+
+    //driver.sleep(3000);
+    driver.wait(webdriver.until
+            .elementLocated(webdriver.By.className('glyphicon-remove')),
+        5000)
+        .then(function() {
+            deleteProject(driver, param, data);
+        }, function() {
+            console.log('no such project');
+        });
+}
+
+function deleteProject(driver, param, data) {
+    //driver.findElement(webdriver.By.linkText('\u68C0\u7D22')).click();
+    driver.findElement(webdriver.By.className('glyphicon-remove')).click();
+    //driver.sleep(3000);
+    driver.wait(webdriver.until.alertIsPresent , 5000)
+        .then(null, function() {
+            console.log('服务器没有响应');
+        });
+    driver.switchTo().alert().accept();
 }
 
 module.exports = {
     login: login,
     createProject: createProject,
+    searchProject: searchProject,
     deleteProject: deleteProject
 };

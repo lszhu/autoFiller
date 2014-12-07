@@ -75,6 +75,10 @@ function saveResult() {
 
 // JSON格式数据的数组转换并保存到csv格式文件
 function jsonToCsv(filePath, data, fields) {
+    // 如果没有数据，则直接返回
+    if (data.length == 0) {
+        return;
+    }
     var d = '';
     var i, j;
     var fieldsLen = fields.length - 1;

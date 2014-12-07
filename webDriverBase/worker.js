@@ -97,7 +97,8 @@ function addOperation(driver, param) {
         //operation.summary(driver, param);
 
         // chequeSys operation
-        operation.createProject(driver, param, data.data);
+        //operation.createProject(driver, param, data.data);
+        operation.searchProject(driver, param, data.data);
 
         data = null;
         process.send({status: 'success'});
