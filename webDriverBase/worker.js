@@ -34,60 +34,75 @@ var driver = new webdriver.Builder().
  */
 
 /*************************************************************
- * 进行自动化操作的操作序列
+ * 设置操作流的事件响应
  */
 
-// 操作流
-var flow = webdriver.promise.controlFlow();
+function setFlow() {
+    // 取得初始操作流
+    var flow = webdriver.promise.controlFlow();
 
-//操作序列中的未知异常处理
-//flow.on('uncaughtException', function(e) {
-//    var quit = e.toString().search('WebDriver.quit()');
-//    if (quit != -1) {
-//        console.log('flow程序已经终止。\n');
-//    } else {
-//        console.error('flow程序遇到异常情况，已经终止执行。\n');
-//    }
-//});
+    //操作序列中的未知异常处理
+    flow.on('uncaughtException', function(e) {
+        var quit = e.toString().search('WebDriver.quit()');
+        if (quit != -1) {
+            console.log('退出操作主动终止工作进程。\n');
+        } else {
+            console.error('工作进程遇到异常情况，已经终止执行。\n');
+        }
+        driver.quit();
+        server.stop();
+    });
 
-// 登录错误处理
-flow.on('loginErr', function(e) {
-    console.error('未能正常登录，稍后会自动重试。');
-    operation.login(driver, config.test, e.times);
-    //test(driver, config.test);
-});
+    // 登录错误处理
+    //flow.on('loginErr', function(e) {
+    //    console.error('未能正常登录，稍后会自动重试。');
+    //    //operation.login(driver, config.test, e.times);
+    //    //test(driver, config.test);
+    //});
 
-// 登录错误处理
-flow.on('loginRetryErr', function(e) {
-    console.error(e.message);
-    driver.quit();
-    //test(driver, config.test);
-});
+    // 多次重试登录错误处理
+    flow.on('loginRetryErr', function(e) {
+        console.error(e.message);
+        driver.quit();
+        server.stop();
+        process.send({status: 'accountErr'});
+        //test(driver, config.test);
+    });
 
-// 当前操作流完成的消息处理
-flow.on('idle', function() {
-    //console.log('idle now');
-    addOperation(driver, config.test);
-});
+    // 当前操作流完成的消息处理
+    flow.on('idle', function() {
+        //console.log('idle now');
+        addOperation(driver, config.test);
+    });
 
+    // 所有操作已完成
+    flow.on('finished', function(d) {
+        console.log(d.message);
+        //driver.close();
+        driver.quit();
+        server.stop();
+        //server.kill();
+        console.log('operation flow is ended');
+        //process.exit();
+    });
 
-flow.on('finished', function(d) {
-    console.log(d.message);
-    driver.quit();
-    //process.exit();
-});
+    return flow;
+}
 
 // 加入自动化操作
 function addOperation(driver, param) {
-    if (data) {
+    //console.log('data: ' + JSON.stringify(data));
+    if (data.status == 'data') {
         operation.search(driver, param);
         operation.summary(driver, param);
-    } else {
+        data = null;
+        process.send({status: 'success'});
+    } else if (data.status == 'noData') {
         // 结束操作并关闭操作窗口
-        flow.emit('finished', {message: '所有操作已成功处理'});
+        process.emit('finished', {message: '所有操作已成功处理'});
+        //console.log('operation is over.');
+        process.send({status: 'finished'});
     }
-    data = null;
-    process.send({type: 'success'});
 }
 //function addOperation(driver, param) {
 //    if (counter > 0) {
@@ -105,6 +120,11 @@ function addOperation(driver, param) {
  * 主程序控制流
  */
 
+var counter = 1;
+var data = null;
+
+var flow = setFlow();
+
 // 主程序控制流未知异常
 process.on('uncaughtException', function(d) {
     var quit = d.toString().search('WebDriver.quit()');
@@ -116,14 +136,17 @@ process.on('uncaughtException', function(d) {
     process.disconnect();
 });
 
+process.on('finished', function() {
+    flow.emit('finished', {message: '所有操作已成功处理'});
+    //process.send({status: 'finished'});
+    console.log('operation is over.');
+});
+
 process.on('message', function(d) {
     data = d;
     //console.log('data: ' + JSON.stringify(data));
 });
 
-var counter = 1;
-var data = null;
-
 operation.login(driver, config.test, 3);
-process.send({type: 'start'});
+
 console.log('child process started.');

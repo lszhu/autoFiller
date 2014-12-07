@@ -12,11 +12,15 @@ function loginTest(driver, param, times) {
             var login = (title === '劳动力资源信息库');
             if (login) {
                 console.log('成功登陆系统');
+                // 开始从主进程中获取数据
+                process.send({status: 'start'});
             } else {
                 //webdriver.promise.rejected(new Error('loginErr'));
                 driver.sleep(param.retryInterval);
                 if (times != 0) {
-                    flow.emit('loginErr', {times: times - 1});
+                    //flow.emit('loginErr', {times: times - 1});
+                    console.error('未能正常登录，稍后会自动重试。');
+                    loginTest(driver, param, times - 1);
                 } else {
                     flow.emit('loginRetryErr', {message: '登录失败次数过多'});
                     //driver.quit();
@@ -45,11 +49,11 @@ function searchTest(driver, param) {
     driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
         5000);
 
-    username.clear();
-    username.sendKeys('王');
-    query.click();
-    driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
-        5000);
+    //username.clear();
+    //username.sendKeys('王');
+    //query.click();
+    //driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
+    //    5000);
 }
 
 function summaryTest(driver, param) {
