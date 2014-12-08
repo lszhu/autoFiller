@@ -1,7 +1,8 @@
 // 配置文件
-var config = require('./config')['chequeSys'];
+var config = require('./config')['hunanGovernmentInput'];
 // 操作序列
-var operation = require('./chequeSysOperation');
+var operation = require('./hunanGovernment');
+//var operation = require('./chequeSysOperation');
 //var operation = require('./operation');
 
 //var util = require('util');
@@ -23,6 +24,7 @@ server.start();
 var driver = new webdriver.Builder().
     usingServer(server.address()).
     withCapabilities(webdriver.Capabilities.ie()).
+    //withCapabilities(webdriver.Capabilities.firefox()).
     build();
 
 /*************************************************************

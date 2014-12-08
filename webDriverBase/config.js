@@ -14,14 +14,14 @@ var actionChequeSys = {
     fields: ['name', 'id', 'description']
 };
 
-var actionInput = {
+var hunanGovernmentInput = {
     url: 'http://59.231.0.185/creatorepp/',
     username: '1311273729',
     password: '123456',
     retryInterval: 5000
 };
 
-var actionConfirm = {
+var hunanGovernmentConfirm = {
     url: 'http://59.231.0.185/creatorepp/',
     username: '1311273730',
     password: '123456',
@@ -31,6 +31,6 @@ var actionConfirm = {
 module.exports = {
     test: actionTest,
     chequeSys: actionChequeSys,
-    input: actionInput,
-    confirm: actionConfirm
+    hunanGovernmentInput: hunanGovernmentInput,
+    hunanGovernmentConfirm: hunanGovernmentConfirm
 };
