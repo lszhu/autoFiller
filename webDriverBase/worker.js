@@ -92,7 +92,7 @@ function setFlow() {
 
 // 加入自动化操作
 function addOperation(driver, param) {
-    //console.log('data: ' + JSON.stringify(data));
+    console.log('data: ' + JSON.stringify(data));
     if (data.status == 'data') {
         // test(hrSys) operation
         //operation.search(driver, param);
@@ -100,7 +100,9 @@ function addOperation(driver, param) {
 
         // chequeSys operation
         //operation.createProject(driver, param, data.data);
-        operation.searchProject(driver, param, data.data);
+        //operation.searchProject(driver, param, data.data);
+        operation.gotoAddPage(driver);
+        operation.addApplication(driver, param, data.data);
 
         data = null;
         process.send({status: 'success'});

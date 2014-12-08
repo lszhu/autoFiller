@@ -18,7 +18,8 @@ var hunanGovernmentInput = {
     url: 'http://59.231.0.185/creatorepp/',
     username: '1311273729',
     password: '123456',
-    retryInterval: 5000
+    retryInterval: 5000,
+    fields: ['username', 'id', 'phone']
 };
 
 var hunanGovernmentConfirm = {

@@ -207,7 +207,7 @@ function createWorker(data, successData, failData) {
 
 // 用于chequeSys项目测试
 var filePath = '../data/project.xlsx';
-var data = getData(filePath);
+var data = filterData(getData(filePath));
 
 console.log(data);
 //jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.fields);
