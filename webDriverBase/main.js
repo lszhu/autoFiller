@@ -1,5 +1,5 @@
 // 配置文件
-var config = require('./config')['chequeSys'];
+var config = require('./config')['hunanGovernmentInput'];
 
 var childProcess = require('child_process');
 var fs = require('fs');
@@ -206,7 +206,10 @@ function createWorker(data, successData, failData) {
 //var data = filterData(getData(filePath));
 
 // 用于chequeSys项目测试
-var filePath = '../data/project.xlsx';
+//var filePath = '../data/project.xlsx';
+//var data = getData(filePath);
+
+var filePath = '../data/名单.xlsx';
 var data = filterData(getData(filePath));
 
 console.log(data);

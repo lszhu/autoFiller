@@ -44,8 +44,6 @@ function login(driver, param, times) {
     );
     button.click();
 
-    driver.sleep(3000);
-
     driver.wait(function() {
         return driver.getTitle().then(function(title) {
             var flow = webdriver.promise.controlFlow();
@@ -87,6 +85,13 @@ function gotoAddPage(driver) {
     );
 
     var target = driver
+        .findElement(webdriver.By.linkText('审批处理'));
+    target.then(
+        function() {console.log('查找到“审批处理”链接');},
+        function(e) {console.log('没有“审批处理”链接'); console.log(e);}
+    );
+    target.click();
+    target = driver
         .findElement(webdriver.By.linkText('办件受理'));
     target.then(
         function() {console.log('查找到“办件受理”链接');},
