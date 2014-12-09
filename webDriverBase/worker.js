@@ -102,7 +102,7 @@ function addOperation(driver, param) {
         //operation.createProject(driver, param, data.data);
         //operation.searchProject(driver, param, data.data);
         operation.gotoAddPage(driver);
-        //operation.addApplication(driver, param, data.data);
+        operation.addApplication(driver, param, data.data);
 
         data = null;
         process.send({status: 'success'});

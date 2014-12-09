@@ -6,6 +6,10 @@ function getGender(idNumber) {
         return;
     }
     var index = idNumber.toString().slice(16, 17);
+    // 如果身份证异常，则默认为男
+    if (isNaN(index) || index === '') {
+        return 'male';
+    }
     index = index % 2;
     return index ? 'male' : 'female';
 }
@@ -110,6 +114,7 @@ function gotoAddPage(driver) {
         function(e) {console.log('没有“审批处理”链接'); console.log(e);}
     );
     target.click();
+    driver.sleep(100);
     target = driver
         .findElement(webdriver.By.linkText('办件受理'));
     target.then(
@@ -122,7 +127,12 @@ function gotoAddPage(driver) {
 
 function addApplication(driver, param, data) {
 
-    driver.switchTo().defaultContent();
+    //driver.sleep(3000);
+    driver.switchTo().defaultContent()
+        .then(
+        function() {console.log('goto the main frame');},
+        function(e) {console.log('err'); console.log(e);}
+    );
     driver.switchTo().frame('perspective_main')
         //.frame(driver.findElement(webdriver.By.css('frame[name="body"]')))
         .then(
@@ -154,30 +164,42 @@ function addApplication(driver, param, data) {
         function(e) {console.log('err'); console.log(e);}
     );
 
-    var type = driver.findElement(webdriver.By.id('applyTypeCtrl_2'));
-    type.sendKeys(data.name);
-    var username = driver.findElement(webdriver.By.name('name'));
-    username.clear();
-    username.sendKeys(data.name);
-    var id = driver.findElement(webdriver.By.name('id'));
-    id.clear();
-    id.sendKeys(data.id);
-    var gender = getGender(data.id);
-    gender = driver.findElement(webdriver.By.id(gender));
-    gender.sendKeys(data.name);
-    var phone = driver.findElement(webdriver.By.name('description'));
-    phone.clear();
-    phone.sendKeys(data.description);
-    var material = driver.findElement(webdriver.By.id('applyTypeCtrl_2'));
-    material.sendKeys(data.name);
 
-    var submit = driver.findElement(webdriver.By.css('button[type="submit"]'));
-    submit.click();
+    var type = driver.findElement(webdriver.By.id('applyTypeCtrl_2'));
+    type.click();
+    driver.sleep(100);
+
+    //var username = driver.findElement(webdriver.By.id('APPLICANT_NAME'));
+    //username.clear();
+    //username.sendKeys(data.username);
+
+    var idNumber = driver.findElement(webdriver.By.id('CERT_ID'));
+    idNumber.clear();
+    idNumber.sendKeys('data.id');
+
+    var gender = getGender(data.id);
+    if (gender == 'male') {
+        driver.findElement(webdriver.By.id('sex_1')).click();
+    } else {
+        driver.findElement(webdriver.By.id('sex_2')).click();
+    }
+
+    var phone = driver.findElement(webdriver.By.id('MOBILE'));
+    phone.clear();
+    phone.sendKeys(data.phone);
+
+     /*
+    //var material = driver.findElement(webdriver.By.id('applyTypeCtrl_2'));
+    //material.sendKeys(data.name);
+    //
+    //var submit = driver.findElement(webdriver.By.css('button[type="submit"]'));
+    //submit.click();
 
     driver.then(
         function() {console.log('操作成功完成');},
         function(e) {console.log('办件受理页面不完整'); console.log(e);}
     );
+*/
     //driver.sleep(3000);
     //driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
     //    5000);
