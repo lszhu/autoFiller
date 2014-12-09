@@ -105,13 +105,26 @@ function createWorker(data, successData, failData) {
 //var data = getData(filePath);
 
 var filePath = '../data/名单.xlsx';
-var data = dataSource.filterData(dataSource.getData(filePath));
+var data = dataSource.getData(filePath);
+// 过滤掉不完整数据项
+data = dataSource.filterData(data);
+// 过滤掉身份证非法及电话号码非法的数据项
+data = data.filter(function(e) {
+    return dataSource.validIdNumber(e.id) && dataSource.validPhone(e.phone);
+});
+// 插入性别：male表示男，female表示女
+for (var i = 0, len = data.length; i < len; i++) {
+    data[i]['gender'] = dataSource.getGender(data[i]['id'])
+}
 
 console.log(data);
 //jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.fields);
-var successData = [];
-var failData = [];
 
+// 保存处理成功的数据
+var successData = [];
+// 保存不能确认处理成功的数据
+var failData = [];
+// 跟踪工作子进程
 var workerProcess;
 
 process.on('finished', function() {
@@ -119,7 +132,7 @@ process.on('finished', function() {
     console.log('remove all listener for createWorker');
     process.removeAllListeners('createWorker');
     // 保存操作结果
-    dataSource.saveResult();
+    dataSource.saveResult(successData, failData);
     setTimeout(function() {
         console.log('主程序正在退出');
     }, 1500);
@@ -133,4 +146,5 @@ process.on('createWorker', function() {
     workerProcess = createWorker(data, successData, failData);
 });
 
+// 启动工作子进程
 process.emit('createWorker');

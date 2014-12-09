@@ -41,7 +41,7 @@ function filterData(data) {
  */
 
 // 保存处理过的数据到文件
-function saveResult() {
+function saveResult(successData, failData) {
     var timeId = timeToId();
     var fields = config.fields;
     jsonToCsv('../data/success-' + timeId + '.csv', successData, fields);
@@ -104,10 +104,55 @@ function timeToId() {
     return id;
 }
 
+// 验证身份证号的合法性
+function validIdNumber(idNumber) {
+    if (idNumber.length != 18 || 12 < idNumber.slice(10, 12) ||
+        idNumber.slice(6, 8) < 19 || 20 < idNumber.slice(6, 8)) {
+        return false;
+    }
+    var weights = [
+        '7', '9', '10', '5', '8', '4', '2', '1', '6',
+        '3', '7', '9', '10', '5', '8', '4', '2', '1'
+    ];
+    var sum = 0;
+    for (var i = 0; i < 17; i++) {
+        var digit = idNumber.charAt(i);
+        if (isNaN(Number(digit))) {
+            return false;
+        }
+        sum += digit * weights[i];
+    }
+    sum = (12 - sum % 11) % 11;
+    return sum == 10 && idNumber.charAt(17).toLowerCase() == 'x' ||
+        sum < 10 && sum == idNumber.charAt(17);
+}
+
+// 验证电话号码，正好为11位数字即可
+function validPhone(phone) {
+    return !isNaN(phone) && phone.toString().length == 11;
+}
+
+// 由身份证的到性别
+function getGender(idNumber) {
+    if (!idNumber) {
+        return;
+    }
+    var index = idNumber.toString().slice(16, 17);
+    // 如果身份证异常，则默认为男
+    if (isNaN(index) || index === '') {
+        return 'male';
+    }
+    index = index % 2;
+    return index ? 'male' : 'female';
+}
+
 module.exports = {
     getData: getData,
     filterData: filterData,
     saveResult: saveResult,
     jsonToCsv: jsonToCsv,
-    timeToId: timeToId
+    timeToId: timeToId,
+    getGender: getGender,
+    validIdNumber: validIdNumber,
+    validPhone: validPhone
 };

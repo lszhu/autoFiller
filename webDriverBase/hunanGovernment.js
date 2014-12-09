@@ -1,19 +1,5 @@
 var webdriver = require('selenium-webdriver');
 
-// 由身份证的到性别
-function getGender(idNumber) {
-    if (!idNumber) {
-        return;
-    }
-    var index = idNumber.toString().slice(16, 17);
-    // 如果身份证异常，则默认为男
-    if (isNaN(index) || index === '') {
-        return 'male';
-    }
-    index = index % 2;
-    return index ? 'male' : 'female';
-}
-
 function login(driver, param, times) {
     driver.get(param.url);
 
@@ -169,16 +155,15 @@ function addApplication(driver, param, data) {
     type.click();
     driver.sleep(100);
 
-    //var username = driver.findElement(webdriver.By.id('APPLICANT_NAME'));
-    //username.clear();
-    //username.sendKeys(data.username);
+    var username = driver.findElement(webdriver.By.id('APPLICANT_NAME'));
+    username.clear();
+    username.sendKeys(data.username);
 
     var idNumber = driver.findElement(webdriver.By.id('CERT_ID'));
     idNumber.clear();
-    idNumber.sendKeys('data.id');
+    idNumber.sendKeys(data.id);
 
-    var gender = getGender(data.id);
-    if (gender == 'male') {
+    if (data.gender == 'male') {
         driver.findElement(webdriver.By.id('sex_1')).click();
     } else {
         driver.findElement(webdriver.By.id('sex_2')).click();
@@ -188,18 +173,32 @@ function addApplication(driver, param, data) {
     phone.clear();
     phone.sendKeys(data.phone);
 
-     /*
-    //var material = driver.findElement(webdriver.By.id('applyTypeCtrl_2'));
-    //material.sendKeys(data.name);
-    //
-    //var submit = driver.findElement(webdriver.By.css('button[type="submit"]'));
+    driver.switchTo().frame('attachSubForm')
+        //.frame(driver.findElement(webdriver.By.css('frame[name="body"]')))
+        .then(
+        function() {console.log('find attachSubForm iframe');},
+        function(e) {console.log('err'); console.log(e);}
+    );
+
+    var xpath = '(//table[@id="attachList"]//input[@type="checkbox"])[2]';
+    var material = driver.findElement(webdriver.By.xpath(xpath));
+    material.then(
+        function() {console.log('find xpath dom');},
+        function(e) {console.log('xpath error'); console.log(e);}
+    );
+    material.click();
+    driver.findElement(webdriver.By.id('btnSubmitAttach')).click();
+
+
+
+    //var submit = driver.findElement(webdriver.By.id('btnAccept'));
     //submit.click();
 
-    driver.then(
-        function() {console.log('操作成功完成');},
-        function(e) {console.log('办件受理页面不完整'); console.log(e);}
-    );
-*/
+    //driver.then(
+    //    function() {console.log('操作成功完成');},
+    //    function(e) {console.log('办件受理页面不完整'); console.log(e);}
+    //);
+
     //driver.sleep(3000);
     //driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
     //    5000);
