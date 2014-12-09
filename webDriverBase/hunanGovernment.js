@@ -46,27 +46,46 @@ function login(driver, param, times) {
 
     driver.wait(function() {
         return driver.getTitle().then(function(title) {
-            var flow = webdriver.promise.controlFlow();
-            var ok = (title === '湖南省网上政务服务--59.231.0.185');
-            if (ok) {
-                console.log('成功登陆系统');
-                // 开始从主进程中获取数据
-                process.send({status: 'start'});
-            } else {
-                //webdriver.promise.rejected(new Error('loginErr'));
-                driver.sleep(param.retryInterval);
-                if (times != 0) {
-                    //flow.emit('loginErr', {times: times - 1});
-                    console.error('未能正常登录，稍后会自动重试。');
-                    login(driver, param, times - 1);
-                } else {
-                    flow.emit('loginRetryErr', {message: '登录失败次数过多'});
-                    //driver.quit();
-                }
-            }
-            return ok;
+            return (title === '湖南省网上政务服务--59.231.0.185');
+            //if (ok) {
+            //    console.log('成功登陆系统');
+            //    // 开始从主进程中获取数据
+            //    process.send({status: 'start'});
+            //} else {
+            //    //webdriver.promise.rejected(new Error('loginErr'));
+            //    driver.sleep(param.retryInterval);
+            //    if (times != 0) {
+            //        //flow.emit('loginErr', {times: times - 1});
+            //        console.error('未能正常登录，稍后会自动重试。');
+            //        login(driver, param, times - 1);
+            //    } else {
+            //        flow.emit('loginRetryErr', {message: '登录失败次数过多'});
+            //        //driver.quit();
+            //    }
+            //}
         });
-    }, 5000);
+    }, 5000).then(
+        function() {
+            console.log('成功登陆系统');
+            // 开始从主进程中获取数据
+            process.send({status: 'start'});
+        },
+        function(err) {
+            //webdriver.promise.rejected(new Error('loginErr'));
+            driver.sleep(param.retryInterval);
+            if (times > 0) {
+                //flow.emit('loginErr', {times: times - 1});
+                console.error('未能正常登录，稍后会自动重试。');
+                console.error('还能尝试登陆次数为：' + times);
+                console.error('login error: ' + err.toString());
+                login(driver, param, times - 1);
+            } else {
+                var flow = webdriver.promise.controlFlow();
+                flow.emit('loginRetryErr', {message: '登录失败次数过多'});
+                //driver.quit();
+            }
+        }
+    );
 }
 
 function gotoAddPage(driver) {

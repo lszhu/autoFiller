@@ -141,24 +141,22 @@ function createWorker(data, successData, failData) {
     });
 
     workerProcess.on('message', function(m) {
-        if (isNaN(data.index)) {
-            data.index = 0;
-            if (data.length) {
-                console.log('正在处理条目序号：1');
-                console.log('信息内容为：', JSON.stringify(data[data.index]));
-            }
-        }
-
         if (m.status == 'accountErr') {
             process.emit('finished');
-            //console.log('emit finished');
+            console.log('账号错误，程序即将终止');
             return;
         }
         if (m.status == 'start') {
+            if (isNaN(data.index)) {
+                // 还未开始处理过数据
+                data.index = 0;
+            }
             if (data.length == 0) {
                 // 无数据情况
                 workerProcess.send({status: 'noData'});
             } else {
+                console.log('正在处理条目序号：1');
+                console.log('信息内容为：', JSON.stringify(data[data.index]));
                 workerProcess.send({status: 'data', data: data[data.index]});
             }
             return;

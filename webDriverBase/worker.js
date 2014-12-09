@@ -156,6 +156,6 @@ process.on('message', function(d) {
     //console.log('data: ' + JSON.stringify(data));
 });
 
-operation.login(driver, config, 3);
+operation.login(driver, config, 2);
 
 console.log('child process started.');
