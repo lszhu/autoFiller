@@ -108,12 +108,9 @@ function gotoAddPage(driver) {
         function(e) {console.log('没有“办件受理”链接'); console.log(e);}
     );
     target.click();
-
 }
 
 function addApplication(driver, param, data) {
-
-    //driver.sleep(3000);
     driver.switchTo().defaultContent()
         .then(
         function() {console.log('goto the main frame');},
@@ -189,10 +186,44 @@ function addApplication(driver, param, data) {
     material.click();
     driver.findElement(webdriver.By.id('btnSubmitAttach')).click();
 
+    driver.switchTo().defaultContent();
+    driver.switchTo().frame('perspective_main');
+    driver.switchTo().frame('perspective_content');
+    driver.switchTo().frame('base_actions_container');
+    driver.switchTo().frame('base_properties_container');
+    driver.switchTo().frame('base_properties_content');
 
+    var submit = driver.findElement(webdriver.By.id('btnAccept'));
+    submit.click();
+    driver.wait(webdriver.until.alertIsPresent , 5000)
+        .then(null, function() {
+            console.log('页面处理错误');
+        });
+    //driver.switchTo().alert().dismiss();
+    driver.switchTo().alert().accept();
 
-    //var submit = driver.findElement(webdriver.By.id('btnAccept'));
-    //submit.click();
+    //driver.switchTo().defaultContent();
+
+    driver.wait(webdriver.until.alertIsPresent , 30000)
+        .then(
+        function() {
+            console.log('出现完成确认框');
+            //driver.switchTo().alert().dismiss();
+        },
+        function() {
+            console.log('服务器没有响应');
+        });
+    driver.sleep(6000);
+    driver.switchTo().alert().dismiss();
+    //    .then(
+    //    function() {
+    //        console.log('完成所有输入操作');
+    //    },
+    //    function(e) {
+    //        console.log('最后处理出现异常');
+    //        console.log(e);
+    //    }
+    //);
 
     //driver.then(
     //    function() {console.log('操作成功完成');},

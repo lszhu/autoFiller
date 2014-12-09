@@ -27,6 +27,13 @@ var driver = new webdriver.Builder().
     //withCapabilities(webdriver.Capabilities.firefox()).
     build();
 
+// 设置加载页面等待的默认最大时间
+//driver.manage().timeouts().pageLoadTimeout(30000);
+// 设置获取页面元素的最大等待时间
+//driver.manage().timeouts().implicitlyWait(30000);
+// 设置窗口的位置于左上角
+driver.manage().window().setPosition(0, 0);
+
 /*************************************************************
  * 使用chromeDriver进行自动化操作的初始化配置
  */

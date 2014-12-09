@@ -105,7 +105,11 @@ function timeToId() {
 }
 
 // 验证身份证号的合法性
-function validIdNumber(idNumber) {
+function validIdNumber(id) {
+    if (!id) {
+        return false;
+    }
+    var idNumber = id.toString();
     if (idNumber.length != 18 || 12 < idNumber.slice(10, 12) ||
         idNumber.slice(6, 8) < 19 || 20 < idNumber.slice(6, 8)) {
         return false;
@@ -127,9 +131,9 @@ function validIdNumber(idNumber) {
         sum < 10 && sum == idNumber.charAt(17);
 }
 
-// 验证电话号码，正好为11位数字即可
+// 验证电话号码，要求至少包含11位数字
 function validPhone(phone) {
-    return !isNaN(phone) && phone.toString().length == 11;
+    return !isNaN(phone) && phone.toString().length >= 11;
 }
 
 // 由身份证的到性别
