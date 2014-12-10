@@ -2,6 +2,7 @@
 var config = require('./config')['hunanGovernmentInput'];
 
 var fs = require('fs');
+var path = require('path');
 var xlsx = require('xlsx');
 
 /*************************************************************
@@ -44,8 +45,10 @@ function filterData(data) {
 function saveResult(successData, failData) {
     var timeId = timeToId();
     var fields = config.fields;
-    jsonToCsv('../data/success-' + timeId + '.csv', successData, fields);
-    jsonToCsv('../data/fail-' + timeId + '.csv', failData, fields);
+    jsonToCsv(path.join(__dirname, '../data/success-' + timeId + '.csv'),
+        successData, fields);
+    jsonToCsv(path.join(__dirname, '../data/fail-' + timeId + '.csv'),
+        failData, fields);
     /*
      var success = '';
      var fail = '';

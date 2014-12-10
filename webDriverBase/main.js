@@ -2,6 +2,7 @@
 var dataSource = require('./dataSource');
 
 var childProcess = require('child_process');
+var path = require('path');
 
 // 进程创建失败，重试间隔（单位ms）
 var createInterval = 1000;
@@ -104,8 +105,8 @@ function createWorker(data, successData, failData) {
 //var filePath = '../data/project.xlsx';
 //var data = getData(filePath);
 
-var filePath = '../data/名单.xlsx';
-var data = dataSource.getData(filePath);
+var filename = '名单new.xlsx';
+var data = dataSource.getData(path.join(__dirname, '../data/', filename));
 // 过滤掉不完整数据项
 data = dataSource.filterData(data);
 // 过滤掉身份证非法及电话号码非法的数据项

@@ -202,9 +202,10 @@ function addApplication(driver, param, data) {
     //driver.switchTo().alert().dismiss();
     driver.switchTo().alert().accept();
 
-    //driver.switchTo().defaultContent();
+    // 加入以下鼠标单击操作，用于隔离两次弹出框操作，以避免promise立即返回而出错
+    driver.findElement(webdriver.By.tagName('body')).click();
 
-    driver.wait(webdriver.until.alertIsPresent , 30000)
+    driver.wait(webdriver.until.alertIsPresent , 60000)
         .then(
         function() {
             console.log('出现完成确认框');
@@ -213,22 +214,8 @@ function addApplication(driver, param, data) {
         function() {
             console.log('服务器没有响应');
         });
-    driver.sleep(6000);
+    //driver.sleep(40000);
     driver.switchTo().alert().dismiss();
-    //    .then(
-    //    function() {
-    //        console.log('完成所有输入操作');
-    //    },
-    //    function(e) {
-    //        console.log('最后处理出现异常');
-    //        console.log(e);
-    //    }
-    //);
-
-    //driver.then(
-    //    function() {console.log('操作成功完成');},
-    //    function(e) {console.log('办件受理页面不完整'); console.log(e);}
-    //);
 
     //driver.sleep(3000);
     //driver.wait(webdriver.until.elementLocated(webdriver.By.tagName('table')),
