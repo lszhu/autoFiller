@@ -1,6 +1,6 @@
 var webdriver = require('selenium-webdriver');
 
-function login(driver, param, times) {
+function login(driver, param, schema, times) {
     driver.get(param.url);
 
     driver.switchTo().frame('body')
@@ -222,7 +222,7 @@ function addApplication(driver, param, data) {
     //    5000);
 }
 
-function searchProject(driver, param, data) {
+function confirmApplication(driver, param, data) {
     driver.get(param.url + '#/search/queryProject');
 
     var username = driver.findElement(webdriver.By.name('name'));
@@ -258,10 +258,21 @@ function deleteProject(driver, param, data) {
     driver.switchTo().alert().accept();
 }
 
+// 除登录外所有的工作流
+function workFlow(driver, param, schema, data) {
+    if (schema == 'hunanGovernmentInput') {
+        gotoAddPage(driver);
+        addApplication(driver, param, data);
+    } else if (schema == 'hunanGovernmentConfirm') {
+        confirmApplication(driver, param, data);
+    } else {
+        confirmApplication(driver, param, data);
+    }
+}
+
 module.exports = {
     login: login,
     gotoAddPage: gotoAddPage,
     addApplication: addApplication,
-    searchProject: searchProject,
-    deleteProject: deleteProject
+    workFlow: workFlow
 };

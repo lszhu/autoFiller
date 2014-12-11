@@ -1,6 +1,6 @@
 var webdriver = require('selenium-webdriver');
 
-function login(driver, param, times) {
+function login(driver, param, schema, times) {
     driver.get(param.url);
 
     driver.findElement(webdriver.By.name('username')).sendKeys(param.username);
@@ -92,9 +92,17 @@ function deleteProject(driver, param, data) {
     driver.switchTo().alert().accept();
 }
 
+// 除登录外所有的工作流
+function workFlow(driver, param, schema, data) {
+    if (schema == 'actionChequeSys') {
+        createProject(driver, param, data);
+    } else {
+        searchProject(driver, param, data);
+        deleteProject(driver, param, data);
+    }
+}
+
 module.exports = {
     login: login,
-    createProject: createProject,
-    searchProject: searchProject,
-    deleteProject: deleteProject
+    workFlow: workFlow
 };

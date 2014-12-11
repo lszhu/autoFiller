@@ -1,12 +1,14 @@
 var actionTest = {
+    auth: true,
     url: 'http://218.76.253.36:40008/',
     username: 'admin',
     password: 'jyj222666',
     retryInterval: 2000,
-    fields: ['姓名', '身份证号码', '联系电话']
+    fields: ['name', 'id', 'description']
 };
 
 var actionChequeSys = {
+    auth: true,
     url: 'http://localhost:23456/',
     username: 'admin',
     password: 'admin',
@@ -15,6 +17,7 @@ var actionChequeSys = {
 };
 
 var hunanGovernmentInput = {
+    auth: true,
     url: 'http://59.231.0.185/creatorepp/',
     username: '1311273729',
     password: '123456',
@@ -23,6 +26,7 @@ var hunanGovernmentInput = {
 };
 
 var hunanGovernmentConfirm = {
+    auth: true,
     url: 'http://59.231.0.185/creatorepp/',
     username: '1311273730',
     password: '123456',

@@ -1,20 +1,21 @@
 // 录入数据源
 var dataSource = require('./dataSource');
 
+var parameter = require('./parameter');
+
 var childProcess = require('child_process');
-var path = require('path');
-
-// 进程创建失败，重试间隔（单位ms）
-var createInterval = 1000;
-
 
 /*************************************************************
  * 根据是否需要本地数据，创建不同工作进程
  */
 
-function createWorker(data, successData, failData) {
+function createWorker(data, successData, failData, schema) {
+    // 通过fork生成子进程（工作进程）
     var workerProcess = childProcess.fork(__dirname + '/worker.js',
-        {silent: true});
+        [schema.toString()], {silent: true});
+
+    // 进程创建失败，重试间隔（单位ms）
+    var createInterval = 1000;
 
     workerProcess.on('error', function() {
         console.log('暂时无法创建工作进程进行自动录入');
@@ -105,20 +106,11 @@ function createWorker(data, successData, failData) {
 //var filePath = '../data/project.xlsx';
 //var data = getData(filePath);
 
-var filename = '名单new.xlsx';
-var data = dataSource.getData(path.join(__dirname, '../data/', filename));
-// 过滤掉不完整数据项
-data = dataSource.filterData(data);
-// 过滤掉身份证非法及电话号码非法的数据项
-data = data.filter(function(e) {
-    return dataSource.validIdNumber(e.id) && dataSource.validPhone(e.phone);
-});
-// 插入性别：male表示男，female表示女
-for (var i = 0, len = data.length; i < len; i++) {
-    data[i]['gender'] = dataSource.getGender(data[i]['id'])
-}
-
-console.log(data);
+var filename = parameter.input ? parameter.input : '名单new.xlsx';
+var schema = parameter.config ? parameter.config : 'actionTest';
+// 读取待录入的数据
+var sourceData = dataSource.getData(filename, schema);
+console.log(sourceData);
 //jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.fields);
 
 // 保存处理成功的数据
@@ -133,7 +125,7 @@ process.on('finished', function() {
     console.log('remove all listener for createWorker');
     process.removeAllListeners('createWorker');
     // 保存操作结果
-    dataSource.saveResult(successData, failData);
+    dataSource.saveResult(successData, failData, schema);
     setTimeout(function() {
         console.log('主程序正在退出');
     }, 1500);
@@ -144,7 +136,7 @@ process.on('finished', function() {
 });
 
 process.on('createWorker', function() {
-    workerProcess = createWorker(data, successData, failData);
+    workerProcess = createWorker(sourceData, successData, failData, schema);
 });
 
 // 启动工作子进程

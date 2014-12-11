@@ -1,13 +1,26 @@
+// 通过启动参数传入工作进程采用的模式
+var schema = process.argv[2];
+console.log('schema: ' + schema);
 // 配置文件
-var config = require('./config')['hunanGovernmentInput'];
+var config = require('./config');
 // 操作序列
-var operation = require('./hunanGovernment');
-//var operation = require('./chequeSysOperation');
-//var operation = require('./operation');
+var operation = loadOperation(schema);
 
-//var util = require('util');
+// 由传入参数schema决定加载不同的操作
+function loadOperation(schema) {
+    if (schema == 'actionTest') {
+        return require('./testOperation');
+    }
+    if (schema == 'actionChequeSys') {
+        return require('./chequeSysOperation');
+    }
+    if (schema == 'hunanGovernmentInput' ||
+        schema == 'hunanGovernmentConfirm') {
+        return require('./hunanGovernment');
+    }
+}
+
 var path = require('path');
-
 var webdriver = require('selenium-webdriver');
 var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
 
@@ -49,7 +62,7 @@ driver.manage().window().setPosition(0, 0);
  * 设置操作流的事件响应
  */
 
-function setFlow() {
+function setFlow(config, schema) {
     // 取得初始操作流
     var flow = webdriver.promise.controlFlow();
 
@@ -82,7 +95,7 @@ function setFlow() {
     // 当前操作流完成的消息处理
     flow.on('idle', function() {
         //console.log('idle now');
-        addOperation(driver, config);
+        addOperation(driver, config[schema], schema);
     });
 
     // 所有操作已完成
@@ -100,7 +113,7 @@ function setFlow() {
 }
 
 // 加入自动化操作
-function addOperation(driver, param) {
+function addOperation(driver, param, schema) {
     console.log('data: ' + JSON.stringify(data));
     if (data.status == 'data') {
         // test(hrSys) operation
@@ -110,8 +123,9 @@ function addOperation(driver, param) {
         // chequeSys operation
         //operation.createProject(driver, param, data.data);
         //operation.searchProject(driver, param, data.data);
-        operation.gotoAddPage(driver);
-        operation.addApplication(driver, param, data.data);
+        //operation.gotoAddPage(driver);
+        //operation.addApplication(driver, param, data.data);
+        operation.workFlow(driver, param, schema, data.data);
 
         data = null;
         process.send({status: 'success'});
@@ -141,7 +155,7 @@ function addOperation(driver, param) {
 //var counter = 1;
 var data = null;
 
-var flow = setFlow();
+var flow = setFlow(config, schema);
 
 // 主程序控制流未知异常
 process.on('uncaughtException', function(d) {
@@ -165,6 +179,9 @@ process.on('message', function(d) {
     //console.log('data: ' + JSON.stringify(data));
 });
 
-operation.login(driver, config, 2);
+if (config[schema].auth) {
+    operation.login(driver, config[schema], schema, 2);
+}
+
 
 console.log('child process started.');

@@ -6,19 +6,20 @@ program
     .option('-t, --type <type>', '指定数据的文件的格式（xlsx或csv）')
     .option('-o, --output <file>', '数据操作成功的记录文件')
     .option('-e, --error <file>', '数据操作失败的记录文件')
-    .option('-c, --config <item>', '指定采用的配置项')
+    .option('-c, --config <schema>', '指定采用的配置项')
     .option('-p, --parallel <n>', '指定同时操作的并行数量', parseInt);
 
 program.on('--help', function(){
     console.log('  使用举例：');
     console.log('');
     console.log('    $ run --help');
-    console.log('    $ run -i inputFile.txt -t csv -c test -p 5');
+    console.log('    $ run -i inputFile.txt -t csv -c testSchema -p 5');
     console.log('');
 });
 
 program.parse(process.argv);
 
+// 用于测试的输出
 console.log('you program parameters are:');
 if (program.input) console.log('input: ' + program.input);
 if (program.type) console.log('type: ' + program.type);

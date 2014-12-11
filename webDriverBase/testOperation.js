@@ -1,6 +1,6 @@
 var webdriver = require('selenium-webdriver');
 
-function loginTest(driver, param, times) {
+function loginTest(driver, param, schema, times) {
     driver.get(param.url);
 
     driver.findElement(webdriver.By.name('username')).sendKeys(param.username);
@@ -65,8 +65,13 @@ function summaryTest(driver, param) {
     }, 5000);
 }
 
+// 除登录外所有的工作流
+function workFlow(driver, param, schema, data) {
+    searchTest(driver, param);
+    summaryTest(driver, param);
+}
+
 module.exports = {
     login: loginTest,
-    search: searchTest,
-    summary: summaryTest
+    workFlow: workFlow
 };

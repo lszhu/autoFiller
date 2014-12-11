@@ -1,5 +1,5 @@
 // 配置文件
-var config = require('./config')['hunanGovernmentInput'];
+var config = require('./config');
 
 var fs = require('fs');
 var path = require('path');
@@ -9,7 +9,7 @@ var xlsx = require('xlsx');
  * 从本地文件获取待处理数据
  */
 
-function getData(filePath) {
+function readXlsx(filePath) {
     try {
         var xlsxData = xlsx.readFile(filePath);
         var sheetName = xlsxData.SheetNames[0];
@@ -25,8 +25,8 @@ function getData(filePath) {
 }
 
 // 过滤掉数据不完整的条目
-function filterData(data) {
-    var fields = config.fields;
+function filterData(data, schema) {
+    var fields = config[schema].fields;
     return data.filter(function(e) {
         for (var i = 0; i < fields.length; i++) {
             if (!e.hasOwnProperty(fields[i]) || !e[fields[i]]) {
@@ -42,9 +42,9 @@ function filterData(data) {
  */
 
 // 保存处理过的数据到文件
-function saveResult(successData, failData) {
+function saveResult(successData, failData, schema) {
     var timeId = timeToId();
-    var fields = config.fields;
+    var fields = config[schema].fields;
     jsonToCsv(path.join(__dirname, '../data/success-' + timeId + '.csv'),
         successData, fields);
     jsonToCsv(path.join(__dirname, '../data/fail-' + timeId + '.csv'),
@@ -153,13 +153,55 @@ function getGender(idNumber) {
     return index ? 'male' : 'female';
 }
 
+///////////////////////////////////////////////////////////////
+// 以下为具体不同模式下读取数据的操作
+
+// 测试hrsys录入数据源获取
+function actionTestData(filename) {
+    return readXlsx(path.join(__dirname, '../data/', filename));
+}
+
+// 测试chequeSys录入数据源获取
+function actionChequeSysData(filename) {
+    return readXlsx(path.join(__dirname, '../data/', filename));
+}
+
+// hunanGovernment录入数据源获取
+function hunanGovernmentInputData(filename) {
+    var data = readXlsx(path.join(__dirname, '../data/', filename));
+    // 过滤掉不完整数据项
+    data = filterData(data, 'hunanGovernmentInput');
+    // 过滤掉身份证非法及电话号码非法的数据项
+    data = data.filter(function(e) {
+        return validIdNumber(e.id) && validPhone(e.phone);
+    });
+    // 插入性别：male表示男，female表示女
+    for (var i = 0, len = data.length; i < len; i++) {
+        data[i]['gender'] = getGender(data[i]['id'])
+    }
+    return data;
+}
+
+function getData(filename, schema) {
+    if (!schema) {
+        return '';
+    }
+    var functions = {
+        actionTest: actionTestData,
+        actionChequeSys: actionChequeSysData,
+        hunanGovernmentInput: hunanGovernmentInputData
+    };
+    return functions[schema](filename);
+}
+
 module.exports = {
-    getData: getData,
+    readXlsx: readXlsx,
     filterData: filterData,
     saveResult: saveResult,
     jsonToCsv: jsonToCsv,
     timeToId: timeToId,
     getGender: getGender,
     validIdNumber: validIdNumber,
-    validPhone: validPhone
+    validPhone: validPhone,
+    getData: getData
 };

@@ -10,7 +10,7 @@ var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
 var pathToSeleniumJar = './server/selenium-server-standalone-2.44.0.jar';
 var server = new SeleniumServer(
     path.join(__dirname, pathToSeleniumJar),
-    {port: 4444}
+    {port: 49900}
 );
 // 启动selenium独立服务器
 server.start();
@@ -34,7 +34,7 @@ driver.wait(function() {
 }, 2000)
     .then(
     function() {console.log('Great, your configuation is right.')},
-    function() {console.log('Oh, please check your configuation.')}
+    function() {console.log('Oh, please check your configuration.')}
 );
 
 driver.quit();
