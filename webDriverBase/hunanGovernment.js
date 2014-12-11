@@ -208,7 +208,7 @@ function addApplication(driver, param, data) {
     driver.wait(webdriver.until.alertIsPresent , 60000)
         .then(
         function() {
-            console.log('出现完成确认框');
+            console.log('成功录入一条信息');
             //driver.switchTo().alert().dismiss();
         },
         function() {

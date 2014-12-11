@@ -6,6 +6,7 @@ var operation = require('./hunanGovernment');
 //var operation = require('./operation');
 
 //var util = require('util');
+var path = require('path');
 
 var webdriver = require('selenium-webdriver');
 var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
@@ -15,9 +16,10 @@ var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
  */
 
 var pathToSeleniumJar = './server/selenium-server-standalone-2.44.0.jar';
-var server = new SeleniumServer(pathToSeleniumJar, {
-    port: 14444
-});
+var server = new SeleniumServer(
+    path.join(__dirname, pathToSeleniumJar),
+    {port: 14444}
+);
 // 启动selenium独立服务器
 server.start();
 
