@@ -30,7 +30,7 @@ var hunanGovernmentConfirm = {
 };
 
 module.exports = {
-    test: actionTest,
+    actionTest: actionTest,
     chequeSys: actionChequeSys,
     hunanGovernmentInput: hunanGovernmentInput,
     hunanGovernmentConfirm: hunanGovernmentConfirm
