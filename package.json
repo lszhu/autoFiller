@@ -5,6 +5,7 @@
     "description": "A tool to auto fill data in webpage",
     "license": "MIT",
     "dependencies": {
+        "commander": "^2.5",
         "nightmare": "^1.6",
         "selenium-webdriver": "^2.44",
         "xlsx": "~0.7"
