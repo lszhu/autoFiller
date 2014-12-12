@@ -6,7 +6,7 @@ var actionTest = {
     retryInterval: 2000,
     fields: ['name', 'id', 'description'],
     driverPort: 6666,
-    dataSource: '名单new.xlsx'
+    dataSource: '名单.xlsx'
 };
 
 var actionChequeSys = {

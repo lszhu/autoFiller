@@ -127,7 +127,7 @@ function addOperation(driver, param, schema) {
         process.send({status: 'success'});
     } else if (data.status == 'noData') {
         // 结束操作并关闭操作窗口
-        process.emit('finished', {message: '所有操作已成功处理'});
+        process.emit('finished', {port: driverPort});
         //console.log('operation is over.');
         //process.send({status: 'finished'});
     } else if (data.status == 'continue') {

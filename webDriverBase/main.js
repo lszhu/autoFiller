@@ -11,9 +11,7 @@ var childProcess = require('child_process');
  * 根据是否需要本地数据，创建不同工作进程
  */
 
-function createWorker(schema, index) {
-    var port = +config[schema].driverPort;
-    port += +index;
+function createWorker(schema, port) {
     console.log('port: ' + port);
     // 通过fork生成子进程（工作进程）
     var workerProcess = childProcess.fork(__dirname + '/worker.js',
@@ -42,7 +40,7 @@ function createWorker(schema, index) {
         //    failData.push(data[data.index]);
         //}
 
-        process.emit('createWorker', {index: index});
+        process.emit('createWorker', {port: port});
     });
 
     workerProcess.on('message', function(m) {
@@ -91,10 +89,19 @@ function createWorker(schema, index) {
                 // 已处理完所有数据
                 workerProcess.send({status: 'noData'});
             }
+
+            // 如果工作进程数还未达到指定数量，则继续创建新的工作进程
+            if (workerProcesses.length < parameter.parallel) {
+                console.log('create a new worker');
+                // 为了不让工作进程突发的增加太快，此处加入产生概率
+                if (Math.random() * workerProcesses.length < 0.5) {
+                    process.emit('createWorker', {port: 0});
+                }
+            }
         } else if (m.status == 'finished') {
             // 工作进程已完成所有操作（操作流为空），且主程无待处理数据的情况
             //process.exit();
-            process.emit('finished');
+            process.emit('finished', {port: port});
             console.log('当前工作任务已完成，程序即将终止');
         }
     });
@@ -123,8 +130,10 @@ var sourceData = dataSource.getData(parameter.input, parameter.config);
 var successData = [];
 // 保存不能确认处理成功的数据
 //var failData = [];
-// 跟踪所有工作子进程
-var workerProcess = [];
+// 跟踪所有工作子进程，数组长度代表工作进程的handler数目（并行工作进程数）
+var workerProcesses = [];
+// 工作进程采用的最小端口号
+var basePort = +config[parameter.config].driverPort;
 
 //process.on('data', function(data) {
 //    // 保存处理成功的数据，由传来的消息中携带
@@ -134,27 +143,46 @@ var workerProcess = [];
 //    sourceData.index++;
 //});
 
-process.on('finished', function() {
-    // 清除createWorker消息监听，目的是不再启动工作进程
-    console.log('remove all listener for createWorker');
-    process.removeAllListeners('createWorker');
-    // 保存操作结果
+process.on('finished', function(msg) {
+    var port = msg.port;
+    // 清除port端口对应工作进程句柄上disconnect消息监听，目的是不再启动工作进程
+    console.log('remove disconnect listener for port %d handler', port);
+    var index = port - basePort;
+    workerProcesses[index].removeAllListeners('disconnect');
+    workerProcesses[index] = null;
+
+    // 检查是否还有在工作的工作进程
+    if (workerProcesses.some(function(e) {return e != null;})) {
+        return;
+    }
+
+    // 如果所有工作进程都已发送finished消息，则保存结果并退出主程序
+    // 首先保存操作结果
     dataSource.saveResult(successData, sourceData, parameter.config);
+    // 为了保证工作进程已经退出，主进程要稍等待几秒钟再退出
     setTimeout(function() {
         console.log('主程序正在退出');
     }, 1500);
-
     setTimeout(function() {
         process.exit();
     }, 3000);
 });
 
 process.on('createWorker', function(msg) {
+    var port = msg.port;
+    // 创建第一个工作进程之后，新增工作进程时，消息中没有携带有效端口号
+    if (port == 0) {
+        // 如果已达到设定工作进程数则不再创建新工作进程
+        if (workerProcesses.length == parameter.parallel) {
+            return;
+        }
+        port = basePort + workerProcesses.length;
+    }
+
+    var index = port - basePort;
     var schema = parameter.config;
-    var port = +config[schema]['driverPort'];
-    port += +msg.index;
-    workerProcess[+msg.index] = createWorker(schema, msg.index);
+    workerProcesses[index] = createWorker(schema, port);
 });
 
 // 启动工作子进程
-process.emit('createWorker', {index: 0});
+process.emit('createWorker', {port: basePort});
