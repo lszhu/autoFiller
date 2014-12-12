@@ -4,7 +4,9 @@ var actionTest = {
     username: 'admin',
     password: 'jyj222666',
     retryInterval: 2000,
-    fields: ['name', 'id', 'description']
+    fields: ['name', 'id', 'description'],
+    driverPort: 6666,
+    dataSource: '名单new.xlsx'
 };
 
 var actionChequeSys = {

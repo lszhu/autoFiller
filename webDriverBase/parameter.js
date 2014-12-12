@@ -28,4 +28,17 @@ if (program.error) console.log('error: ' + program.error);
 if (program.config) console.log('config: ' + program.config);
 if (program.parallel) console.log('parallel: ' + program.parallel);
 
+// 程序运行必须指定操作模式，测试时可以跳过
+//if (!program.config) {
+//    console.log('没有指定自动操作的模式， 程序已经退出');
+//    setTimeout(function() {
+//        process.exit(1);
+//    });
+//}
+
+// 临时用于测试
+if (!program.config) {
+    program.config = 'actionTest'
+}
+
 module.exports = program;

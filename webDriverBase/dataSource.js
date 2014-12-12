@@ -42,11 +42,12 @@ function filterData(data, schema) {
  */
 
 // 保存处理过的数据到文件
-function saveResult(successData, failData, schema) {
+function saveResult(successData, sourceData, schema) {
     var timeId = timeToId();
     var fields = config[schema].fields;
     jsonToCsv(path.join(__dirname, '../data/success-' + timeId + '.csv'),
         successData, fields);
+    var failData = filterSuccess(successData, sourceData, schema);
     jsonToCsv(path.join(__dirname, '../data/fail-' + timeId + '.csv'),
         failData, fields);
     /*
@@ -69,6 +70,22 @@ function saveResult(successData, failData, schema) {
      fs.writeFileSync('../data/fail-' + timeId + '.txt', fail);
      }
      */
+}
+
+// 从sourceData中过滤除successData中的数据，返回结果数组
+function filterSuccess(successData, sourceData,  schema) {
+    var fields = config[schema].fields;
+    var len = fields.length;
+    return sourceData.filter(function(a) {
+        return !successData.some(function(b) {
+            for (var i = 0; i < len; i++) {
+                if (a[fields[i]] != b[fields[i]]) {
+                    return false;
+                }
+            }
+            return true;
+        });
+    });
 }
 
 // JSON格式数据的数组转换并保存到csv格式文件
@@ -183,15 +200,29 @@ function hunanGovernmentInputData(filename) {
 }
 
 function getData(filename, schema) {
-    if (!schema) {
-        return '';
+    var data = [];
+    data.count = 0;
+    // 未设置操作模式或模式非法
+    if (!schema || !config[schema]) {
+        return data;
     }
+
+    var defaultFile = config[schema].dataSource;
+    // 如果不存在dataSource，则表示该模式不需要数据输入
+    if (!defaultFile) {
+        return data;
+    }
+    filename = filename ? filename : defaultFile;
+
     var functions = {
         actionTest: actionTestData,
         actionChequeSys: actionChequeSysData,
         hunanGovernmentInput: hunanGovernmentInputData
     };
-    return functions[schema](filename);
+    data = functions[schema](filename);
+    data.index = 0;
+    data.count = 0;
+    return data;
 }
 
 module.exports = {
@@ -203,5 +234,6 @@ module.exports = {
     getGender: getGender,
     validIdNumber: validIdNumber,
     validPhone: validPhone,
+    filterSuccess: filterSuccess,
     getData: getData
 };

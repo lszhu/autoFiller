@@ -1,5 +1,7 @@
 // 录入数据源
 var dataSource = require('./dataSource');
+// 配置文件
+var config = require('./config');
 
 var parameter = require('./parameter');
 
@@ -9,10 +11,13 @@ var childProcess = require('child_process');
  * 根据是否需要本地数据，创建不同工作进程
  */
 
-function createWorker(data, successData, failData, schema) {
+function createWorker(schema, index) {
+    var port = +config[schema].driverPort;
+    port += +index;
+    console.log('port: ' + port);
     // 通过fork生成子进程（工作进程）
     var workerProcess = childProcess.fork(__dirname + '/worker.js',
-        [schema.toString()], {silent: true});
+        [schema, port], {silent: true});
 
     // 进程创建失败，重试间隔（单位ms）
     var createInterval = 1000;
@@ -32,53 +37,65 @@ function createWorker(data, successData, failData, schema) {
     workerProcess.on('disconnect', function() {
         console.log('工作子程序退出');
         // 工作子程序异常结束，则将相应处理的数据存入处理失败序列
-        if (data.index > 0) {
-            data.index--;
-            failData.push(data[data.index]);
-        }
+        //if (data.index > 0) {
+        //    data.index--;
+        //    failData.push(data[data.index]);
+        //}
 
-        process.emit('createWorker');
+        process.emit('createWorker', {index: index});
     });
 
     workerProcess.on('message', function(m) {
+        var data;
         if (m.status == 'accountErr') {
             process.emit('finished');
             console.log('账号错误，程序即将终止');
             return;
         }
         if (m.status == 'start') {
-            if (isNaN(data.index)) {
-                // 还未开始处理过数据
-                data.index = 0;
-            }
-            if (data.length == 0) {
+            sourceData.count++;
+            if (isNaN(sourceData.index)) {
+                // 对应的操作模式不需要数据
+                workerProcess.send({status: 'continue'});
+                console.log('正在进行重复操作的次数：' + sourceData.count);
+            } else if (sourceData.length == 0) {
                 // 无数据情况
                 workerProcess.send({status: 'noData'});
             } else {
-                console.log('正在处理条目序号：1');
-                console.log('信息内容为：', JSON.stringify(data[data.index]));
-                workerProcess.send({status: 'data', data: data[data.index]});
+                data = sourceData[sourceData.index];
+                sourceData.index++;
+                console.log('正在处理条目序号：' + sourceData.count);
+                console.log('信息内容为：', JSON.stringify(data));
+                workerProcess.send({status: 'data', data: data});
             }
-            return;
         } else if (m.status == 'success') {
-            successData.push(data[data.index]);
+            if (m.data) {
+                successData.push(m.data);
+            }
+            if(0 <= sourceData.index) {
+                sourceData.index++;
+            }
+            sourceData.count++;
+            if (!sourceData.index) {
+                // 无数据源的情况
+                console.log('正在进行重复操作的次数：' + sourceData.count);
+                workerProcess.send({status: 'continue'});
+            } else if (sourceData.index < sourceData.length) {
+                // 还有未处理数据
+                data = sourceData[sourceData.index];
+                console.log('正在处理条目序号：',  + sourceData.count);
+                console.log('信息内容为：', JSON.stringify(data));
+
+                workerProcess.send({status: 'data', data: data});
+            } else {
+                // 已处理完所有数据
+                workerProcess.send({status: 'noData'});
+            }
         } else if (m.status == 'finished') {
             // 工作进程已完成所有操作（操作流为空），且主程无待处理数据的情况
             //process.exit();
             process.emit('finished');
             console.log('当前工作任务已完成，程序即将终止');
-        }
-
-        data.index++;
-        if (data.index < data.length) {
-            // 还有未处理数据
-            console.log('正在处理条目序号：', 1 + data.index);
-            console.log('信息内容为：', JSON.stringify(data[data.index]));
-
-            workerProcess.send({status: 'data', data: data[data.index]});
-        } else {
-            // 已处理完所有数据
-            workerProcess.send({status: 'noData'});
         }
     });
 
@@ -98,34 +115,31 @@ function createWorker(data, successData, failData, schema) {
  * 主程序流程
  */
 
-// 用于test（hrSys）项目测试
-//var filePath = '../data/名单.xlsx';
-//var data = filterData(getData(filePath));
-
-// 用于chequeSys项目测试
-//var filePath = '../data/project.xlsx';
-//var data = getData(filePath);
-
-var filename = parameter.input ? parameter.input : '名单new.xlsx';
-var schema = parameter.config ? parameter.config : 'actionTest';
 // 读取待录入的数据
-var sourceData = dataSource.getData(filename, schema);
-console.log(sourceData);
-//jsonToCsv('../data/success-' + 'tmp' + '.txt', data, config.fields);
+var sourceData = dataSource.getData(parameter.input, parameter.config);
+//console.log(sourceData);
 
 // 保存处理成功的数据
 var successData = [];
 // 保存不能确认处理成功的数据
-var failData = [];
-// 跟踪工作子进程
-var workerProcess;
+//var failData = [];
+// 跟踪所有工作子进程
+var workerProcess = [];
+
+//process.on('data', function(data) {
+//    // 保存处理成功的数据，由传来的消息中携带
+//    successData.push(data);
+//    var i = sourceData.index;
+//    workerProcess.send({type: 'data', data: sourceData[i]});
+//    sourceData.index++;
+//});
 
 process.on('finished', function() {
     // 清除createWorker消息监听，目的是不再启动工作进程
     console.log('remove all listener for createWorker');
     process.removeAllListeners('createWorker');
     // 保存操作结果
-    dataSource.saveResult(successData, failData, schema);
+    dataSource.saveResult(successData, sourceData, parameter.config);
     setTimeout(function() {
         console.log('主程序正在退出');
     }, 1500);
@@ -135,9 +149,12 @@ process.on('finished', function() {
     }, 3000);
 });
 
-process.on('createWorker', function() {
-    workerProcess = createWorker(sourceData, successData, failData, schema);
+process.on('createWorker', function(msg) {
+    var schema = parameter.config;
+    var port = +config[schema]['driverPort'];
+    port += +msg.index;
+    workerProcess[+msg.index] = createWorker(schema, msg.index);
 });
 
 // 启动工作子进程
-process.emit('createWorker');
+process.emit('createWorker', {index: 0});

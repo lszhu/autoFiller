@@ -1,6 +1,8 @@
 // 通过启动参数传入工作进程采用的模式
 var schema = process.argv[2];
 console.log('schema: ' + schema);
+var driverPort = process.argv[3];
+console.log('driver port: ' + driverPort);
 // 配置文件
 var config = require('./config');
 // 操作序列
@@ -31,7 +33,7 @@ var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
 var pathToSeleniumJar = './server/selenium-server-standalone-2.44.0.jar';
 var server = new SeleniumServer(
     path.join(__dirname, pathToSeleniumJar),
-    {port: 14444}
+    {port: driverPort}
 );
 // 启动selenium独立服务器
 server.start();
@@ -89,6 +91,7 @@ function setFlow(config, schema) {
         console.error(e.message);
         driver.quit();
         server.stop();
+        // 向主程序发送账号错误消息
         process.send({status: 'accountErr'});
     });
 
@@ -96,6 +99,8 @@ function setFlow(config, schema) {
     flow.on('idle', function() {
         //console.log('idle now');
         addOperation(driver, config[schema], schema);
+        // 向主程序发送已处理数据
+        process.send({status: 'success', data: processedData});
     });
 
     // 所有操作已完成
@@ -114,39 +119,23 @@ function setFlow(config, schema) {
 
 // 加入自动化操作
 function addOperation(driver, param, schema) {
-    console.log('data: ' + JSON.stringify(data));
+    //console.log('data: ' + JSON.stringify(data));
     if (data.status == 'data') {
-        // test(hrSys) operation
-        //operation.search(driver, param);
-        //operation.summary(driver, param);
-
-        // chequeSys operation
-        //operation.createProject(driver, param, data.data);
-        //operation.searchProject(driver, param, data.data);
-        //operation.gotoAddPage(driver);
-        //operation.addApplication(driver, param, data.data);
+        // 获取到新的待处理数据
         operation.workFlow(driver, param, schema, data.data);
-
         data = null;
         process.send({status: 'success'});
     } else if (data.status == 'noData') {
         // 结束操作并关闭操作窗口
         process.emit('finished', {message: '所有操作已成功处理'});
         //console.log('operation is over.');
-        process.send({status: 'finished'});
+        //process.send({status: 'finished'});
+    } else if (data.status == 'continue') {
+        //无需数据源对应的处理模式
+        operation.workFlow(driver, param, schema);
+        process.send({status: 'success'});
     }
 }
-//function addOperation(driver, param) {
-//    if (counter > 0) {
-//        operation.search(driver, param);
-//        operation.summary(driver, param);
-//    } else if (counter == 0) {
-//        // 结束操作并关闭操作窗口
-//        flow.emit('finished', {message: '所有操作已成功处理'});
-//        //process.exit();
-//    }
-//    counter--;
-//}
 
 /*************************************************************
  * 主程序控制流
@@ -154,6 +143,7 @@ function addOperation(driver, param, schema) {
 
 //var counter = 1;
 var data = null;
+var processedData = null;
 
 var flow = setFlow(config, schema);
 
@@ -168,9 +158,10 @@ process.on('uncaughtException', function(d) {
     process.disconnect();
 });
 
+// 当工作进程的操作完成时可以发射finished事件来结束工作进程，并通知主程序
 process.on('finished', function() {
     flow.emit('finished', {message: '所有操作已成功处理'});
-    //process.send({status: 'finished'});
+    process.send({status: 'finished'});
     console.log('operation is over.');
 });
 
@@ -180,8 +171,11 @@ process.on('message', function(d) {
 });
 
 if (config[schema].auth) {
+    // 需要登录的情况
     operation.login(driver, config[schema], schema, 2);
+} else {
+    // 无需登录则直接进入操作状态
+    flow.emit('idle');
 }
 
-
-console.log('child process started.');
+console.log('创建了一个工作进程');
