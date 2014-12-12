@@ -70,9 +70,6 @@ function createWorker(schema, port) {
             if (m.data) {
                 successData.push(m.data);
             }
-            if(0 <= sourceData.index) {
-                sourceData.index++;
-            }
             sourceData.count++;
             if (!sourceData.index) {
                 // 无数据源的情况
@@ -83,8 +80,8 @@ function createWorker(schema, port) {
                 data = sourceData[sourceData.index];
                 console.log('正在处理条目序号：',  + sourceData.count);
                 console.log('信息内容为：', JSON.stringify(data));
-
                 workerProcess.send({status: 'data', data: data});
+                sourceData.index++;
             } else {
                 // 已处理完所有数据
                 workerProcess.send({status: 'noData'});

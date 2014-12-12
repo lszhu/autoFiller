@@ -43,7 +43,7 @@ if (!program.config) {
     program.config = 'actionTest'
 }
 if (!program.parallel) {
-    program.parallel = 6;
+    program.parallel = 2;
 }
 
 module.exports = program;

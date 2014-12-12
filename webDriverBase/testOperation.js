@@ -69,6 +69,19 @@ function summaryTest(driver, param) {
 function workFlow(driver, param, schema, data) {
     searchTest(driver, param);
     summaryTest(driver, param);
+
+    // 发送成功操作数据
+    //var flow = webdriver.promise.controlFlow();
+    //flow.execute(function() {
+    //    process.send({status: 'success', data: data});
+    //    console.log('data: ' + JSON.stringify(data));
+    //});
+    // 发送成功操作数据
+    driver.wait(function() {return true})
+        .then(function() {
+            process.send({status: 'success', data: data});
+            console.log('data: ' + JSON.stringify(data));
+        })
 }
 
 module.exports = {

@@ -100,7 +100,7 @@ function setFlow(config, schema) {
         //console.log('idle now');
         addOperation(driver, config[schema], schema);
         // 向主程序发送已处理数据
-        process.send({status: 'success', data: processedData});
+        //process.send({status: 'success', data: processedData});
     });
 
     // 所有操作已完成
@@ -124,7 +124,7 @@ function addOperation(driver, param, schema) {
         // 获取到新的待处理数据
         operation.workFlow(driver, param, schema, data.data);
         data = null;
-        process.send({status: 'success'});
+        //process.send({status: 'success'});
     } else if (data.status == 'noData') {
         // 结束操作并关闭操作窗口
         process.emit('finished', {port: driverPort});
@@ -143,7 +143,7 @@ function addOperation(driver, param, schema) {
 
 //var counter = 1;
 var data = null;
-var processedData = null;
+//var processedData = null;
 
 var flow = setFlow(config, schema);
 
