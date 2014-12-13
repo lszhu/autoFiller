@@ -8,7 +8,7 @@ program
     .option('-e, --error <file>', '数据操作失败的记录文件')
     .option('-c, --config <schema>', '指定采用的配置项')
     .option('-p, --parallel <n>', '指定同时操作的并行数量', parseInt, 1)
-    .option('-b, --browser <name>', '指定操作采用的浏览器', String, 'chrome');
+    .option('-b, --browser <name>', '指定操作采用的浏览器', String, 'ie');
 
 program.on('--help', function(){
     console.log('  使用举例：');
@@ -19,7 +19,17 @@ program.on('--help', function(){
 });
 
 program.parse(process.argv);
-// 设置默认
+
+// 指定浏览器时，不区分大小写
+program.browser = program.browser.toLowerCase();
+// chrome与chromium含义相同
+if (program.browser == 'chromium') {
+    program.browser = 'chrome';
+}
+// ie与internetExplorer含义相同
+if (program.browser == 'internetexplorer') {
+    program.browser = 'ie';
+}
 
 // 用于测试的输出
 console.log('you program parameters are:');

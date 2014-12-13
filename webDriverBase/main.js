@@ -131,8 +131,6 @@ var successData = [];
 var workerProcesses = [];
 // 工作进程采用的最小端口号
 var basePort = +config[parameter.config].driverPort;
-// 指定采用的外部浏览器
-var browser = parameter.prowser;
 
 //process.on('data', function(data) {
 //    // 保存处理成功的数据，由传来的消息中携带
@@ -180,7 +178,7 @@ process.on('createWorker', function(msg) {
 
     var index = port - basePort;
     var schema = parameter.config;
-    workerProcesses[index] = createWorker(schema, port, browser);
+    workerProcesses[index] = createWorker(schema, port, parameter.browser);
 });
 
 // 启动工作子进程

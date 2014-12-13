@@ -1,8 +1,12 @@
 // 通过启动参数传入工作进程采用的模式
 var schema = process.argv[2];
 console.log('schema: ' + schema);
+// 启动webdriver独立服务器的端口
 var driverPort = process.argv[3];
 console.log('driver port: ' + driverPort);
+// 指定待运行的浏览器
+var browser = process.argv[4];
+console.log('browser: ' + browser);
 // 配置文件
 var config = require('./config');
 // 操作序列
@@ -24,25 +28,42 @@ function loadOperation(schema) {
 
 var path = require('path');
 var webdriver = require('selenium-webdriver');
-var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
 
 /*************************************************************
- * 使用selenium独立服务器进行自动化操作的初始化配置
+ * 根据采用不同的浏览器客户端，进行自动化操作的初始化配置
  */
 
-var pathToSeleniumJar = './server/selenium-server-standalone-2.44.0.jar';
-var server = new SeleniumServer(
-    path.join(__dirname, pathToSeleniumJar),
-    {port: driverPort}
-);
-// 启动selenium独立服务器
-server.start();
-
-var driver = new webdriver.Builder().
-    usingServer(server.address()).
-    withCapabilities(webdriver.Capabilities.ie()).
-    //withCapabilities(webdriver.Capabilities.firefox()).
-    build();
+// 用于保存webDriver及独立服务器的操作handler
+var driver, server;
+if (browser == 'ie') {
+    // 用于启动selenium独立服务器
+    var SeleniumServer = require('selenium-webdriver/remote').SeleniumServer;
+    var pathToSeleniumJar = './server/selenium-server-standalone-2.44.0.jar';
+    // 设置启动selenium独立服务器的参数
+    server = new SeleniumServer(
+        path.join(__dirname, pathToSeleniumJar),
+        {port: driverPort}
+    );
+    // 启动selenium独立服务器
+    server.start();
+    // 返回webdriver实例
+    driver = new webdriver.Builder().
+        usingServer(server.address()).
+        withCapabilities(webdriver.Capabilities[browser]()).
+        //withCapabilities(webdriver.Capabilities.ie()).
+        //withCapabilities(webdriver.Capabilities.firefox()).
+        build();
+} else if (browser == 'firefox') {
+    // 不启动独立服务器，直接使用firefoxDriver进行自动化操作
+    firefox = require('selenium-webdriver/firefox');
+    driver = new firefox.Driver();
+} else if (browser == 'chrome') {
+    var chrome = require('selenium-webdriver/chrome');
+    driver = new chrome.Driver();
+} else {
+    console.log('不支持使用' + browser + '进行操作');
+    process.send('finished');
+}
 
 // 设置加载页面等待的默认最大时间
 //driver.manage().timeouts().pageLoadTimeout(30000);
@@ -50,15 +71,6 @@ var driver = new webdriver.Builder().
 //driver.manage().timeouts().implicitlyWait(30000);
 // 设置窗口的位置于左上角
 driver.manage().window().setPosition(0, 0);
-
-/*************************************************************
- * 使用chromeDriver进行自动化操作的初始化配置
- */
-/*
- var driver = new webdriver.Builder().
- withCapabilities(webdriver.Capabilities.chrome()).
- build();
- */
 
 /*************************************************************
  * 设置操作流的事件响应
@@ -77,7 +89,7 @@ function setFlow(config, schema) {
             console.error('工作进程遇到异常情况，已经终止执行。\n');
         }
         driver.quit();
-        server.stop();
+        server && server.stop();
     });
 
     // 登录错误处理
@@ -90,7 +102,7 @@ function setFlow(config, schema) {
     flow.on('loginRetryErr', function(e) {
         console.error(e.message);
         driver.quit();
-        server.stop();
+        server && server.stop();
         // 向主程序发送账号错误消息
         process.send({status: 'accountErr'});
     });
@@ -108,7 +120,7 @@ function setFlow(config, schema) {
         console.log(d.message);
         //driver.close();
         driver.quit();
-        server.stop();
+        server && server.stop();
         //server.kill();
         console.log('operation flow is ended');
         //process.exit();
