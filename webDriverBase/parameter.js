@@ -7,8 +7,8 @@ program
     .option('-o, --output <file>', '数据操作成功的记录文件')
     .option('-e, --error <file>', '数据操作失败的记录文件')
     .option('-c, --config <schema>', '指定采用的配置项')
-    .option('-p, --parallel <n>', '指定同时操作的并行数量', parseInt)
-    .option('-b, --browser <browser>', '指定操作采用的浏览器');
+    .option('-p, --parallel <n>', '指定同时操作的并行数量', parseInt, 1)
+    .option('-b, --browser <name>', '指定操作采用的浏览器', String, 'chrome');
 
 program.on('--help', function(){
     console.log('  使用举例：');
@@ -19,6 +19,7 @@ program.on('--help', function(){
 });
 
 program.parse(process.argv);
+// 设置默认
 
 // 用于测试的输出
 console.log('you program parameters are:');
@@ -41,9 +42,6 @@ if (program.browser) console.log('browser:' + program.browser);
 // 临时用于测试
 if (!program.config) {
     program.config = 'actionTest'
-}
-if (!program.parallel) {
-    program.parallel = 2;
 }
 
 module.exports = program;

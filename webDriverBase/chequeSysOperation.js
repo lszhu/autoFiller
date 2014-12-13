@@ -92,7 +92,7 @@ function deleteProject(driver, param, data) {
     driver.switchTo().alert().accept();
 }
 
-// 除登录外所有的工作流
+// 除登录外所有的工作流，注意在结束时要代表工作进程向主进程发送完成消息并传送数据
 function workFlow(driver, param, schema, data) {
     if (schema == 'actionChequeSys') {
         createProject(driver, param, data);
@@ -100,6 +100,13 @@ function workFlow(driver, param, schema, data) {
         searchProject(driver, param, data);
         deleteProject(driver, param, data);
     }
+
+    // 发送成功操作数据
+    driver.wait(function() {return true}, 1000)
+        .then(function() {
+            process.send({status: 'success', data: data});
+            //console.log('data: ' + JSON.stringify(data));
+        });
 }
 
 module.exports = {

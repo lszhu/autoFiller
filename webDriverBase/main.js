@@ -11,11 +11,11 @@ var childProcess = require('child_process');
  * 根据是否需要本地数据，创建不同工作进程
  */
 
-function createWorker(schema, port) {
+function createWorker(schema, port, browser) {
     console.log('port: ' + port);
     // 通过fork生成子进程（工作进程）
     var workerProcess = childProcess.fork(__dirname + '/worker.js',
-        [schema, port], {silent: true});
+        [schema, port, browser], {silent: true});
 
     // 进程创建失败，重试间隔（单位ms）
     var createInterval = 1000;
@@ -131,6 +131,8 @@ var successData = [];
 var workerProcesses = [];
 // 工作进程采用的最小端口号
 var basePort = +config[parameter.config].driverPort;
+// 指定采用的外部浏览器
+var browser = parameter.prowser;
 
 //process.on('data', function(data) {
 //    // 保存处理成功的数据，由传来的消息中携带
@@ -178,7 +180,7 @@ process.on('createWorker', function(msg) {
 
     var index = port - basePort;
     var schema = parameter.config;
-    workerProcesses[index] = createWorker(schema, port);
+    workerProcesses[index] = createWorker(schema, port, browser);
 });
 
 // 启动工作子进程

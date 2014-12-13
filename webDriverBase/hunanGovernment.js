@@ -258,21 +258,28 @@ function deleteProject(driver, param, data) {
     driver.switchTo().alert().accept();
 }
 
-// 除登录外所有的工作流
+// 除登录外所有的工作流，注意在结束时要代表工作进程向主进程发送完成消息并传送数据
 function workFlow(driver, param, schema, data) {
+    var successData = null;
     if (schema == 'hunanGovernmentInput') {
         gotoAddPage(driver);
         addApplication(driver, param, data);
+        successData = data;
     } else if (schema == 'hunanGovernmentConfirm') {
         confirmApplication(driver, param, data);
     } else {
         confirmApplication(driver, param, data);
     }
+
+    // 发送成功操作数据
+    driver.wait(function() {return true}, 1000)
+        .then(function() {
+            process.send({status: 'success', data: successData});
+            //console.log('data: ' + JSON.stringify(successData));
+        });
 }
 
 module.exports = {
     login: login,
-    gotoAddPage: gotoAddPage,
-    addApplication: addApplication,
     workFlow: workFlow
 };

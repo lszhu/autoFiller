@@ -1,1 +1,1 @@
-node webDriverBase\main.js
+node webDriverBase\main.js -c hunanGovernmentInput -p 5
